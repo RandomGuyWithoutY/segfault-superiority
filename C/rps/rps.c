@@ -52,7 +52,7 @@ int rps_algo(unsigned int player_y, unsigned int player_z)
     }
 }
 
-int rps_chr2int(char chr)
+int rps_chr2int(int chr)
 {
     switch (chr) {
         case 'r':
