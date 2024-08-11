@@ -4,6 +4,8 @@
 #include <string.h>
 #include <conio.h>
 
+#define getch  _getch
+
 #ifndef FSIZE
 	#define FSIZE 0x10000000
 #endif
