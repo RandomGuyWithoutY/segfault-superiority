@@ -1,0 +1,25 @@
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",      "RookieMistakeSoft LLC."
+            VALUE "FileVersion",      "1.0"
+        #ifdef PRO_EDITION
+            VALUE "FileDescription",  "Russian Roulette: System32 Edition (Pro)"
+            VALUE "InternalName",     "roulette (pro)"
+            VALUE "OriginalFilename", "roulette (pro).exe"
+        #else
+            VALUE "FileDescription",  "Russian Roulette: System32 Edition (Trial)"
+            VALUE "InternalName",     "roulette (trial)"
+            VALUE "OriginalFilename", "roulette (trial).exe"
+        #endif
+            VALUE "LegalCopyright",   "Copyright (c) 2000 RookieMistakeSoft LLC."
+            VALUE "ProductName",      "Russian Roulette: System32 Edition"
+            VALUE "ProductVersion",   "1.0"
+        END
+    END
+END
