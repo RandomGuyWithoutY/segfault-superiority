@@ -219,6 +219,8 @@
 		MorseSeq encoded_seq;
 		int      seq_found;
 
+		memset(&mb_state, 0, sizeof(mb_state));
+
 		for (size_t i = 0; msg_src[i]; i += mb_size) {
 			mb_size = mbrtoc16(&utf16_char, msg_src + i, msg_len - i, &mb_state);
 
@@ -297,6 +299,8 @@
 		size_t    decode_off = 0;
 		size_t    mb_size;
 		mbstate_t mb_state;
+
+		memset(&mb_state, 0, sizeof(mb_state));
 
 		for (size_t i = 0; i < morse_len; i++) {
 			mb_size = c16rtomb(
