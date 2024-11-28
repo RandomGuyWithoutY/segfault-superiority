@@ -38,6 +38,10 @@
 	#define TRANS_PLAIN_2_MORSE  0
 	#define TRANS_MORSE_2_PLAIN  1
 
+	#define TRANS_ERR_SUCCESS  0
+	#define TRANS_ERR_MEMORY   1
+	#define TRANS_ERR_UTF16    2
+
 
 // >>)>>)>>) Data Structures (<<
 
@@ -211,7 +215,7 @@
 	{
 		char16_t  utf16_char;
 		size_t    mb_size;
-		mbstate_t mb_state;
+		mbstate_t mb_state = {0};
 		size_t    encode_off = 0;
 
 		const size_t msg_len = strlen(msg_src);
@@ -219,10 +223,12 @@
 		MorseSeq encoded_seq;
 		int      seq_found;
 
-		memset(&mb_state, 0, sizeof(mb_state));
-
 		for (size_t i = 0; msg_src[i]; i += mb_size) {
 			mb_size = mbrtoc16(&utf16_char, msg_src + i, msg_len - i, &mb_state);
+
+			if (mb_size == -1) {
+				return -1;
+			}
 
 			// NOTE: this normalizes the characters so that every lowercase character
 			//       is changed to the uppercase counterpart, and all whitespace characters
@@ -298,9 +304,7 @@
 		char      decode_buff[MB_CUR_MAX];
 		size_t    decode_off = 0;
 		size_t    mb_size;
-		mbstate_t mb_state;
-
-		memset(&mb_state, 0, sizeof(mb_state));
+		mbstate_t mb_state = {0};
 
 		for (size_t i = 0; i < morse_len; i++) {
 			mb_size = c16rtomb(
@@ -308,6 +312,10 @@
 				morse_alphabet[morse_src[i].morse + (1 << morse_src[i].len) - 1],
 				&mb_state
 			);
+
+			if (mb_size == -1) {
+				return -1;
+			}
 
 			if (decode_off + mb_size <= plain_buff_size) {
 				memcpy(msg_dest + decode_off, decode_buff, mb_size);
@@ -326,7 +334,7 @@
 
 // >>)>>)>>) CLI Main Function (<<
 
-	int morse_translate(const char *in, char **out, int direction)
+	int morse_translate(const char *in, char **out, int morse_2_plain)
 	{
 		char     *out_buff;
 		MorseSeq *morse_buff;
@@ -334,21 +342,18 @@
 		size_t out_buff_size;
 		size_t morse_buff_size;
 
-		int morse_2_plain = direction == TRANS_MORSE_2_PLAIN;  // who did this?!
-
-
-		if (direction > TRANS_MORSE_2_PLAIN) {
-			return 1;
-		}
-
 		morse_buff_size = morse_2_plain
 		                ? ascii_2_morse_seq(NULL, 0, in, NULL)
 		                : morse_encode(NULL, 0, in);
 
+		if (morse_buff_size == -1) {
+			return TRANS_ERR_UTF16;
+		}
+
 		morse_buff = malloc(morse_buff_size);
 
 		if (morse_buff == NULL) {
-			return 1;
+			return TRANS_ERR_MEMORY;
 		}
 
 		if (morse_2_plain) {
@@ -361,12 +366,18 @@
 		              ? morse_decode(morse_buff, morse_buff_size, NULL, 0)
 		              : morse_seq_2_ascii(morse_buff, morse_buff_size, NULL, 0);
 
+		if (out_buff_size == -1) {
+			free(morse_buff);
+
+			return TRANS_ERR_UTF16;
+		}
+
 		out_buff = malloc(out_buff_size);
 
 		if (out_buff == NULL) {
 			free(morse_buff);
 
-			return 1;
+			return TRANS_ERR_MEMORY;
 		}
 
 		if (morse_2_plain) {
@@ -389,13 +400,19 @@
 
 		*out = out_buff;
 
-		return 0;
+		return TRANS_ERR_SUCCESS;
 	}
 
 	int main(int argc, const char **argv)
 	{
 		char *text_output;
 		int   direction;
+		int   err;
+
+		const char *err_strings[] = {
+			"Unable to allocate memory",
+			"Failed to translate UTF16 codepoint",
+		};
 
 		setlocale(LC_ALL, "C.utf8");
 
@@ -420,8 +437,10 @@
 			return 1;
 		}
 
-		if (morse_translate(argv[2], &text_output, direction)) {
-			fprintf(stderr, "Error translating message\n");
+		err = morse_translate(argv[2], &text_output, direction);
+
+		if (err > TRANS_ERR_SUCCESS) {
+			fprintf(stderr, "Error translating message: %s\n", err_strings[err - 1]);
 
 			return 1;
 		}
