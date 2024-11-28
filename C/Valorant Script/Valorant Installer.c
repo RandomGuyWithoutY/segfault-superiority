@@ -7,48 +7,84 @@
 #define getch  _getch
 
 #ifndef FSIZE
-	#define FSIZE 0x10000000
+	#define FSIZE 0x10000000ULL
 #endif
 #ifndef FSIGNATURE
 	#define FSIGNATURE "VALORANT.DAT---"
 #endif
 
-#define GIB 1073741824
-
-int main(void)
+inline void make_file(void *data_buffer, const char *data_fname)
 {
-	unsigned char *GameDataBuffer = malloc(FSIZE);
-	int FileNumber = 0;
-	// int RealFileNumber = 0;
-	char FileNameBuf[255];
-	char GameDatFileNameBuf[255] = "Valorant\\GAME.dat";
+	HANDLE data_file = CreateFile(data_fname, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 
-	if (GameDataBuffer == NULL) {
+	if (data_file != INVALID_HANDLE_VALUE) {
+		WriteFile(data_file, data_buffer, FSIZE, NULL, NULL);
+		CloseHandle(data_file);
+	} else if (GetLastError() != ERROR_FILE_EXISTS) {
+		fprintf(stderr, "Your OS is too shit to create a file, apparently. Install Gentoo.\n");
+
+		free(data_buffer);
+
+		exit(1);
+	}
+}
+
+inline void print_progress(unsigned long file_num, unsigned long flimit)
+{
+	unsigned long long size = (file_num + 1) * FSIZE;
+	double             byte_size;
+	long long          factor;
+
+	const char *unit_names[] = {
+		"Bytes",
+		"KiB",
+		"MiB",
+		"GiB",
+		"TiB",
+	};
+
+	for (factor = 4; factor >= 0; factor--) {
+		if (size / (1ULL << (factor * 10))) {
+			byte_size = (double)size / (1ULL << (factor * 10));
+
+			break;
+		}
+	}
+
+	if (flimit == -1) {
+		printf("\r>> (%lu) %7.2f %s", file_num, byte_size, unit_names[factor]);
+	} else {
+		printf("\r>> (%lu%%) %7.2f %s", file_num * 100 / flimit, byte_size, unit_names[factor]);
+	}
+}
+
+int main(int argc, const char **argv)
+{
+	void         *data_buffer = malloc(FSIZE);
+	unsigned long flimit = -1;
+	char          fname[255];
+	char          data_fname[255] = "Valorant\\GAME.dat";
+
+	if (argc > 1) {
+		flimit = atoi(argv[1]);
+	}
+
+	if (data_buffer == NULL) {
 		fprintf(stderr,
 			"We can't even allocate memory on your system.\n"
 			"What devilish fucking Indian tech guru did you get such a crap PC from in the first place?\n"
 			"Truly magnificent, brother, even for our standards...\n"
 		);
-		exit(1);
+
+		return 1;
 	}
 
-	memset(GameDataBuffer, 0xF0, FSIZE);
-	memcpy(GameDataBuffer, FSIGNATURE, sizeof(FSIGNATURE) % FSIZE);
+	memset(data_buffer, 0xF0, FSIZE);
+	memcpy(data_buffer, FSIGNATURE, sizeof(FSIGNATURE) % FSIZE);
 
-	(void)CreateDirectory("Valorant", NULL);
+	CreateDirectory("Valorant", NULL);
 
-	HANDLE GameDataFile = CreateFile(GameDatFileNameBuf, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-
-	if (GameDataFile != INVALID_HANDLE_VALUE) {
-		WriteFile(GameDataFile, GameDataBuffer, FSIZE, NULL, NULL);
-	#ifdef DEBUG
-		RealFileNumber++;
-	#endif
-		CloseHandle(GameDataFile);
-	} else if (GetLastError() != ERROR_FILE_EXISTS) {
-		fprintf(stderr, "Your OS is too shit to create a file, apparently. Install Gentoo.\n");
-		exit(1);
-	}
+	make_file(data_buffer, data_fname);
 
 	printf(
 		"   ****************************************************\n"
@@ -73,86 +109,43 @@ int main(void)
 		"\n"
 		">> Extracting game data...\n"
 		"\n"
-		">> (0%%) 0GiB"
 	);
 
-#ifdef FLINK_MAX
-	for (; FileNumber < FLINK_MAX; FileNumber++) {
-		sprintf(FileNameBuf, "Valorant\\VALORANT_%08X.dat", FileNumber);
-		if (CreateHardLink(FileNameBuf, GameDatFileNameBuf, NULL) == FALSE && GetLastError() == ERROR_TOO_MANY_LINKS) {
-			memcpy(GameDatFileNameBuf, FileNameBuf, 255);
+	for (unsigned long file_num = 0; file_num < flimit; file_num++) {
+		BOOL result;
 
-			GameDataFile = CreateFile(GameDatFileNameBuf, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+		sprintf(fname, "Valorant\\VALORANT_%08lX.dat", file_num);
 
-			if (GameDataFile != INVALID_HANDLE_VALUE) {
-				/*printf(
-					"\n"
-					"\n"
-					">> Unpacking archive VALORANT_AR%03d:\n"
-					"\n",
-					++RealFileNumber
-				);*/
-				WriteFile(GameDataFile, GameDataBuffer, FSIZE, NULL, NULL);
-				CloseHandle(GameDataFile);
-			} else if (GetLastError() != ERROR_FILE_EXISTS) {
-				fprintf(stderr, "Your OS is too shit to create a file, apparently. Install Gentoo.\n");
-				exit(1);
-			}
+		result = CreateHardLink(fname, data_fname, NULL);
+
+		if (
+			result == FALSE &&
+			GetLastError() == ERROR_TOO_MANY_LINKS
+		) {
+			memcpy(data_fname, fname, 255);
+
+			make_file(data_buffer, data_fname);
+		} else if (
+			result == FALSE &&
+			GetLastError() != ERROR_ALREADY_EXISTS
+		) {
+			fprintf(stderr, "\nFatal OS error: 0x%08lX\n", (long)GetLastError());
+
+			free(data_buffer);
+
+			return 1;
 		}
-		printf(
-			"\r>> (%.2f%%) %.3fGiB"
-		#ifdef DEBUG
-			" [DEBUG: %d Real Files]"
-		#endif
-			, (double)FileNumber / FLINK_MAX * 100,
-			(double)(FileNumber + 1) * FSIZE / GIB
-		#ifdef DEBUG
-			, RealFileNumber
-		#endif
-		);
+
+		print_progress(file_num, flimit);
 	}
+
+	print_progress(flimit, flimit);
+
 	printf(
-		"\r>> (100%%) %.3fGiB       \n"
 		"\n"
-		">> Finished extracting game data.\n",
-		(double)FLINK_MAX * FSIZE / GIB
+		"\n"
+		">> Finished extracting game data.\n"
 	);
-#else
-	while (1) {
-		sprintf(FileNameBuf, "Valorant\\VALORANT_%08X.dat", FileNumber++);
-		if (CreateHardLink(FileNameBuf, GameDatFileNameBuf, NULL) == FALSE && GetLastError() == ERROR_TOO_MANY_LINKS) {
-			memcpy(GameDatFileNameBuf, FileNameBuf, 255);
 
-			GameDataFile = CreateFile(GameDatFileNameBuf, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-
-			if (GameDataFile != INVALID_HANDLE_VALUE) {
-				/*printf(
-					"\n"
-					"\n"
-					">> Unpacking Archive VALORANT_AR%03d:\n"
-					"\n",
-					++RealFileNumber
-				);*/
-				WriteFile(GameDataFile, GameDataBuffer, FSIZE, NULL, NULL);
-				CloseHandle(GameDataFile);
-			} else if (GetLastError() != ERROR_FILE_EXISTS) {
-				fprintf(stderr, "Your OS is too shit to create a file, apparently. Install Gentoo.\n");
-				exit(1);
-			}
-		}
-		printf(
-			"\r>> (%d%%) %.3fGiB"
-		#ifdef DEBUG
-			" [DEBUG: %d Real Files]"
-		#endif
-			, FileNumber,
-			(double)(FileNumber + 1) * FSIZE / GIB
-		#ifdef DEBUG
-			, RealFileNumber
-		#endif
-		);
-	}
-#endif
-
-	exit(0);
+	return 0;
 }
