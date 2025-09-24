@@ -8,3 +8,5 @@
 | rps                                       | rps            | Rock, paper, scissors              | All   | 2024 | ANSI       | English  |
 | Russian Roulette - System32 Edition (Pro) | sys32-roulette | System32 folder "russian roulette" | Win32 | 2023 | ANSI       | English  |
 | Valorant Script                           | valorant-8tb   | Valorant disk space exhauster      | Win32 | 2023 | ANSI       | English  |
+| num-guess                                 | nguess         | Offensive number guessing game     | All   | 2024 | ANSI       | English  |
+| cbt                                       | cbt            | *C*harge, *B*lock, A*t*tack        | Win32 | 2024 | ANSI       | English  |
