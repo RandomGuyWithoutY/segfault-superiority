@@ -10,4 +10,4 @@
 | Valorant Script                           | valorant-8tb   | Valorant disk space exhauster      | Win32 | 2023 | ANSI       | English  |
 | num-guess                                 | nguess         | Offensive number guessing game     | All   | 2024 | ANSI       | English  |
 | cbt                                       | cbt            | *C*harge, *B*lock, A*t*tack        | Win32 | 2024 | ANSI       | English  |
-| ArgView                                   | argview        | View how CLI arguments are parsed  | All   | 2022 | ANSO       | English  |
+| ArgView                                   | argview        | View how CLI arguments are parsed  | All   | 2022 | ANSI       | English  |
