@@ -14,6 +14,8 @@
 	#define PRINT_DEBUG
 #endif
 
+typedef int mxint_t;
+
 const char *field_names[FIELD_COUNT] = {
 	"Erhöhung der Exportzölle",
 	"Aufhebung der Exportzölle",
@@ -33,7 +35,7 @@ const char *field_names[FIELD_COUNT] = {
 	"Breitbandausbau",
 };
 
-const int8_t field_matrixes[FIELD_COUNT][MATRIX_COUNT] = {
+const mxint_t field_matrixes[FIELD_COUNT][MATRIX_COUNT] = {
 	{-1, -1, +1,  0,  0,  0},
 	{+1, +1, -1,  0,  0,  0},
 	{+1, +1,  0, -1,  0, +1},
@@ -52,15 +54,15 @@ const int8_t field_matrixes[FIELD_COUNT][MATRIX_COUNT] = {
 	{+1, +1,  0,  0,  0,  0},
 };
 
-const int8_t initial_matrix[MATRIX_COUNT] = {2, 2, 1, 2, 1, 2};
+const mxint_t initial_matrix[MATRIX_COUNT] = {2, 2, 1, 2, 1, 2};
 
 typedef struct {
-	int8_t matrix_ptr;
-	int8_t matrix_path[MAX_PATH];
-	int8_t matrix_path_len;
+	mxint_t matrix_ptr;
+	mxint_t matrix_path[MAX_PATH];
+	mxint_t matrix_path_len;
 } StackItem;
 
-int8_t *add_matrix(int8_t *matrix_1, const int8_t *matrix_2)
+mxint_t *add_matrix(mxint_t *matrix_1, const mxint_t *matrix_2)
 {
 	int sum;
 
@@ -75,7 +77,7 @@ int8_t *add_matrix(int8_t *matrix_1, const int8_t *matrix_2)
 	return matrix_1;
 }
 
-int8_t *get_matrix(int8_t *matrix_path, int8_t *first_matrix)
+mxint_t *get_matrix(mxint_t *matrix_path, mxint_t *first_matrix)
 {
 	for (int i = 0; i < MAX_PATH; i++) {
 		add_matrix(first_matrix, field_matrixes[matrix_path[i]]);
@@ -84,7 +86,7 @@ int8_t *get_matrix(int8_t *matrix_path, int8_t *first_matrix)
 	return first_matrix;
 }
 
-bool matrix_gt(int8_t *matrix_1, int8_t *matrix_2)
+bool matrix_gt(mxint_t *matrix_1, mxint_t *matrix_2)
 {
 	int matrix_1_sum = 0;
 	int matrix_2_sum = 0;
@@ -97,7 +99,7 @@ bool matrix_gt(int8_t *matrix_1, int8_t *matrix_2)
 	return matrix_1_sum > matrix_2_sum;
 }
 
-bool path_has(int8_t *matrix_path, int matrix_path_len, int val)
+bool path_has(mxint_t *matrix_path, int matrix_path_len, int val)
 {
 	for (int i = 0; i < matrix_path_len; i++) {
 		if (matrix_path[i] == val) {
@@ -108,7 +110,7 @@ bool path_has(int8_t *matrix_path, int matrix_path_len, int val)
 	return false;
 }
 
-void print_matrix(int8_t *matrix_path, int8_t *matrix)
+void print_matrix(mxint_t *matrix_path, mxint_t *matrix)
 {
 	printf("[");
 
@@ -132,13 +134,13 @@ void print_matrix(int8_t *matrix_path, int8_t *matrix)
 
 int main(void)
 {
-	int8_t matrix_ptr = 0;
-	int8_t matrix_path[MAX_PATH] = {0};
-	int    matrix_path_len = 0;
+	mxint_t matrix_ptr = 0;
+	mxint_t matrix_path[MAX_PATH] = {0};
+	int     matrix_path_len = 0;
 
-	int8_t matrix_current[MATRIX_COUNT];
-	int8_t matrix_found[MATRIX_COUNT] = {0, 0, 0, 0, 0, 0};
-	int8_t matrix_found_path[MAX_PATH] = {0};
+	mxint_t matrix_current[MATRIX_COUNT];
+	mxint_t matrix_found[MATRIX_COUNT] = {0, 0, 0, 0, 0, 0};
+	mxint_t matrix_found_path[MAX_PATH] = {0};
 
 	StackItem current_stck_item;
 
@@ -202,3 +204,4 @@ int main(void)
 		matrix_ptr < FIELD_COUNT
 	);
 }
+
