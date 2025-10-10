@@ -27,7 +27,7 @@ ull nguess_bad_rand(ull min, ull max)
 	unsigned *num_bytes = (unsigned *)&raw_num;
 	ull delta;
 
-	for (int i = 0; i < sizeof(raw_num); i++) {
+	for (int i = 0; i < sizeof(raw_num) / sizeof(*num_bytes); i++) {
 		num_bytes[i] = rand();
 	}
 
@@ -56,23 +56,6 @@ ull nguess_user_num(const char *prompt)
 	
 	return num;
 }
-
-/* NOTE: idfk what this function was supposed to be for */
-/*int nguess_user_question(const char *prompt, const char *choices)
-{
-	int input;
-	int chr = getchar();
-
-	printf("%s ", prompt);
-
-	input = 0;
-
-	while (chr != '\n' && chr != EOF) {
-		chr = getchar();
-	}
-
-	return chr == EOF ? RPS_EOF : input;
-}*/
 
 int main(void)
 {
