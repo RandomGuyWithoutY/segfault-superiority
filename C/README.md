@@ -11,3 +11,4 @@
 | num-guess                                 | nguess         | Offensive number guessing game     | All   | 2024 | ANSI       | English  |
 | cbt                                       | cbt            | *C*harge, *B*lock, A*t*tack        | Win32 | 2024 | ANSI       | English  |
 | ArgView                                   | argview        | View how CLI arguments are parsed  | All   | 2022 | ANSI       | English  |
+| snake32                                   | snake32        | Classic snake for Windows terminal | Win32 | 2025 | ANSI       | English  |
