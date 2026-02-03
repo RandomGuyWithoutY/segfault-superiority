@@ -1,3 +1,5 @@
+/* https://www.teacheconomy.de/media/unterrichtsmaterial/magische-vieleck-interaktiv/interaktiv/index.html */
+
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -180,14 +182,14 @@ int main(void)
 
 			matrix_ptr = 0;
 		} else {
-			memcpy(matrix_current, initial_matrix, MATRIX_COUNT);
+			memcpy(matrix_current, initial_matrix, sizeof(*matrix_current) * MATRIX_COUNT);
 
 			get_matrix(matrix_path, matrix_current);
 
 			if (matrix_gt(matrix_current, matrix_found)) {
 				PRINT_DEBUG;
 
-				memcpy(matrix_found, matrix_current, MATRIX_COUNT);
+				memcpy(matrix_found, matrix_current, sizeof(*matrix_found) * MATRIX_COUNT);
 				memcpy(matrix_found_path, matrix_path, MAX_PATH);
 
 				print_matrix(matrix_path, matrix_current);
